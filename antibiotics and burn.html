@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>燒燙傷病人預防性抗生素使用決策輔助工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is structured as a narrative journey to guide clinical decision-making. It begins with the high-stakes problem (Infection Threat), moves to the central conflict (The Debate), uses data visualization to weigh evidence (Evidence & Risks), presents the definitive conclusion from authorities (Expert Consensus), and finally provides a clear, actionable alternative (The Recommended Strategy). This thematic flow was chosen over mirroring the report's academic structure to make the complex information more digestible, memorable, and directly applicable for a clinical audience, moving them from understanding the problem to implementing the solution. -->
+    <!-- Visualization & Content Choices: 
+        - Infection Fatality Stat: Goal: Inform. Method: Large HTML text for impact. Justification: Immediately establishes the problem's severity. Library: N/A.
+        - Benefit vs. Risk Comparison: Goal: Compare. Method: Interactive Bar Chart showing Risk Ratios. Justification: Visually contrasts the low-quality evidence for benefit against the strong evidence of harm (resistance), making the imbalance clear. Library: Chart.js (Canvas).
+        - Risk Breakdown: Goal: Inform (Proportion). Method: Interactive Donut Chart. Justification: Shows the composition of risks, highlighting antibiotic resistance as the primary concern. Library: Chart.js (Canvas).
+        - Authority Guidelines: Goal: Organize. Method: Interactive Tabbed Table. Justification: Presents dense guideline information in a structured, easily comparable format without overwhelming the user. Interaction allows focusing on one authority at a time. Library: N/A (HTML/JS).
+        - Recommended Infection Control Flow: Goal: Organize (Process). Method: HTML/CSS Flowchart. Justification: Clearly visualizes the multi-step, recommended alternative to antibiotics in a sequential, easy-to-follow manner. Library: N/A.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #F8F7F4; 
+            color: #3D405B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #D3674A;
+        }
+        .nav-link.active {
+            color: #D3674A;
+            border-bottom: 2px solid #D3674A;
+        }
+        .tab-btn {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab-btn.active {
+            background-color: #8D9A7A;
+            color: white;
+        }
+        .flow-step {
+            border-left: 4px solid #8D9A7A;
+        }
+        .flow-arrow {
+            color: #8D9A7A;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-[#3D405B]">燒燙傷感染預防</div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#problem" class="nav-link pb-1">核心問題</a>
+                <a href="#debate" class="nav-link pb-1">主要爭議</a>
+                <a href="#evidence" class="nav-link pb-1">證據與風險</a>
+                <a href="#consensus" class="nav-link pb-1">專家共識</a>
+                <a href="#strategy" class="nav-link pb-1">推薦策略</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="problem" class="py-16 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#3D405B] mb-4">燒燙傷後的最大威脅：感染</h1>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">燒燙傷嚴重破壞皮膚屏障並抑制免疫系統，使病人極易發生感染。這不僅是併發症，更是導致預後不良和死亡的獨立危險因子。</p>
+            <div class="bg-white rounded-xl shadow-lg p-8 inline-block">
+                <div class="text-7xl font-bold text-[#D3674A]">36%</div>
+                <p class="text-xl text-gray-700 mt-2">的死亡案例被認為直接由感染所致</p>
+                <p class="text-sm text-gray-500 mt-1">(來源: 重度燒燙傷研究)</p>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+
+        <section id="debate" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">核心爭議：是否應使用預防性抗生素(SAP)?</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">鑑於感染的嚴重性，使用預防性全身性抗生素（SAP）似乎是個直觀的選擇。然而，現有證據顯示這是一把雙面刃，其潛在效益與顯著風險之間存在巨大衝突。</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-8 border-t-4 border-green-500">
+                    <h3 class="text-2xl font-bold text-green-700 mb-4">潛在效益 (低品質證據)</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1">✓</span>
+                            <span>部分統合分析顯示可降低全因死亡率 (RR 0.54)。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1">✓</span>
+                            <span>可能降低肺炎（包括呼吸器相關肺炎）的發生率。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">⚠️</span>
+                            <span class="font-semibold">重要警示：</span>
+                        </li>
+                        <li class="pl-7 text-gray-600">支持上述效益的研究，其整體方法學品質普遍被評為「差」，存在高偏誤風險，結論可靠性不足。</li>
+                    </ul>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8 border-t-4 border-red-500">
+                    <h3 class="text-2xl font-bold text-red-700 mb-4">明確風險 (高品質證據)</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">✗</span>
+                            <span>顯著增加抗生素抗藥性風險 (RR 2.84)。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">✗</span>
+                            <span>增加艱難梭菌 (*C. difficile*) 感染的發生率。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-3 mt-1">✗</span>
+                            <span>改變宿主微生物群，潛在長期影響不明。</span>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-green-500 mr-3 mt-1">💡</span>
+                            <span class="font-semibold">臨床意義：</span>
+                        </li>
+                        <li class="pl-7 text-gray-600">誘發的抗藥性會嚴重限制未來真實感染發生時的治療選擇，對病人安全構成直接威脅。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+
+        <section id="evidence" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">視覺化證據：風險與效益的權衡</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">當我們將數據視覺化時，預防性抗生素的利弊權衡變得更加清晰。圖表顯示，其帶來的抗藥性風險遠遠超過基於低品質證據的潛在效益。</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-bold text-center mb-4 text-[#3D405B]">效益 vs. 風險的風險比 (RR) 比較</h3>
+                    <div class="chart-container">
+                        <canvas id="benefitRiskChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-gray-500 mt-4">此圖表直觀地比較了預防性用藥對死亡率的潛在正面影響與其對抗生素抗藥性的負面影響。數字越遠離1，表示影響越顯著。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-bold text-center mb-4 text-[#3D405B]">預防性用藥的主要風險分佈</h3>
+                    <div class="chart-container">
+                        <canvas id="risksDonutChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-gray-500 mt-4">在所有相關風險中，誘發抗生素抗藥性是最大的擔憂，佔據了風險構成的主要部分，其次是艱難梭菌感染。</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+
+        <section id="consensus" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">權威機構的共識</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">基於現有證據，全球主要燒燙傷與重症醫學權威機構一致不建議「常規」對燒燙傷病人使用預防性全身性抗生素。點擊下方頁籤查看各機構的詳細建議。</p>
+            </div>
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+                <div id="tabs-container" class="flex flex-wrap justify-center border-b border-gray-200 mb-4">
+                    <button data-tab="ABA" class="tab-btn px-4 py-2 -mb-px font-medium text-gray-600 rounded-t-lg">美國燒燙傷協會 (ABA)</button>
+                    <button data-tab="WHO" class="tab-btn px-4 py-2 -mb-px font-medium text-gray-600 rounded-t-lg">世界衛生組織 (WHO)</button>
+                    <button data-tab="Sepsis" class="tab-btn px-4 py-2 -mb-px font-medium text-gray-600 rounded-t-lg">Surviving Sepsis Campaign</button>
+                    <button data-tab="Other" class="tab-btn px-4 py-2 -mb-px font-medium text-gray-600 rounded-t-lg">其他例外考量</button>
+                </div>
+                <div id="tabs-content" class="min-h-[150px]">
+                    <div data-content="ABA" class="tab-content hidden p-4">
+                        <h4 class="font-bold text-xl text-[#8D9A7A] mb-2">美國燒燙傷協會 (ABA)</h4>
+                        <p class="text-gray-700"><strong class="text-red-600">不建議</strong>對吸入性損傷或大面積燒燙傷病人常規使用預防性全身性抗生素。主要理由是缺乏確鑿證據，且可能增加細菌抗藥性。</p>
+                    </div>
+                    <div data-content="WHO" class="tab-content hidden p-4">
+                        <h4 class="font-bold text-xl text-[#8D9A7A] mb-2">世界衛生組織 (WHO)</h4>
+                        <p class="text-gray-700">建議<strong class="text-red-600">僅在確診</strong>溶血性鏈球菌傷口感染或敗血症的情況下才給予全身性抗生素，以避免不必要用藥和降低抗藥性風險。</p>
+                    </div>
+                    <div data-content="Sepsis" class="tab-content hidden p-4">
+                        <h4 class="font-bold text-xl text-[#8D9A7A] mb-2">Surviving Sepsis Campaign</h4>
+                        <p class="text-gray-700">明確指出，對於非感染性炎症狀態（如燒燙傷）的病人，<strong class="text-red-600">不建議</strong>持續性全身性抗菌預防性治療。</p>
+                    </div>
+                    <div data-content="Other" class="tab-content hidden p-4">
+                        <h4 class="font-bold text-xl text-[#8D9A7A] mb-2">有限的例外考量情境</h4>
+                        <p class="text-gray-700">儘管不建議常規使用，但在極少數特定高風險情境下，臨床醫生可能<strong class="text-yellow-600">權衡利弊後考慮</strong>，例如：</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1">
+                            <li><strong>圍手術期：</strong>針對清創和植皮等特定手術。</li>
+                            <li><strong>需機械通氣的重度病人：</strong>部分研究顯示可能改善預後。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+        
+        <section id="strategy" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3D405B]">推薦策略：全面的感染預防與控制</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">預防感染的基石並非預防性用藥，而是一套多模式、綜合性的照護策略。這才是改善病人預後、同時保護抗生素有效性的關鍵路徑。</p>
+            </div>
+            <div class="max-w-2xl mx-auto space-y-8">
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-4">
+                        <div>
+                            <div class="flex items-center justify-center w-12 h-12 bg-[#8D9A7A] rounded-full text-white font-bold text-xl">1</div>
+                        </div>
+                        <div class="w-px h-full bg-gray-300"></div>
+                    </div>
+                    <div class="pb-8 flow-step pl-6">
+                        <h3 class="font-bold text-xl mb-2 text-[#3D405B]">細緻的傷口管理</h3>
+                        <p class="text-gray-600">這是預防感染的第一道防線。核心在於移除細菌滋生的溫床。包括徹底的傷口清潔、清除壞死組織，以及最重要的「早期切除與植皮」。</p>
+                    </div>
+                </div>
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-4">
+                        <div>
+                            <div class="flex items-center justify-center w-12 h-12 bg-[#8D9A7A] rounded-full text-white font-bold text-xl">2</div>
+                        </div>
+                        <div class="w-px h-full bg-gray-300"></div>
+                    </div>
+                    <div class="pb-8 flow-step pl-6">
+                        <h3 class="font-bold text-xl mb-2 text-[#3D405B]">局部抗菌劑的合理使用</h3>
+                        <p class="text-gray-600">使用如磺胺嘧啶銀等局部藥物來控制傷口表面的細菌生長，防止感染惡化。但需注意其潛在副作用和對傷口癒合的影響。</p>
+                    </div>
+                </div>
+                <div class="flex">
+                    <div class="flex flex-col items-center mr-4">
+                        <div>
+                            <div class="flex items-center justify-center w-12 h-12 bg-[#8D9A7A] rounded-full text-white font-bold text-xl">3</div>
+                        </div>
+                        <div class="w-px h-full bg-gray-300"></div>
+                    </div>
+                    <div class="pb-8 flow-step pl-6">
+                        <h3 class="font-bold text-xl mb-2 text-[#3D405B]">嚴格的院內感染控制</h3>
+                        <p class="text-gray-600">這是阻斷病原體傳播的關鍵。包含嚴格的手部衛生、個人防護裝備(PPE)的使用、環境消毒以及對特定病人的隔離措施。</p>
+                    </div>
+                </div>
+                <div class="flex">
+                     <div class="flex flex-col items-center mr-4">
+                        <div>
+                            <div class="flex items-center justify-center w-12 h-12 bg-[#8D9A7A] rounded-full text-white font-bold text-xl">4</div>
+                        </div>
+                    </div>
+                    <div class="flow-step pl-6">
+                        <h3 class="font-bold text-xl mb-2 text-[#3D405B]">智慧的抗菌藥物管理 (ASP)</h3>
+                        <p class="text-gray-600">最終防線是智慧用藥。建立本地抗生素圖譜，嚴密監測感染跡象，僅在「確診感染」時，根據藥敏結果進行針對性治療，並盡快降階。這需要感染科專家和藥師的共同參與。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-6 py-12 text-center">
+            <h2 class="text-2xl font-bold mb-4">結論與未來展望</h2>
+            <p class="max-w-3xl mx-auto text-gray-300 mb-6">對於成人燒燙傷病人，應採取審慎、針對性的抗生素使用方法，並以全面的感染控制措施為核心。未來的希望在於更高品質的隨機對照試驗，以釐清特定高風險族群的用藥效益，從而制定更精準的策略。</p>
+            <p class="text-sm text-gray-500">此互動式報告基於《成人燒燙傷病人預防性全身性抗生素之角色：現行實務與爭議之實證回顧》。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const tooltipTitleCallback = (tooltipItems) => {
+                const item = tooltipItems[0];
+                if (!item) return '';
+                let label = item.chart.data.labels[item.dataIndex];
+                if (Array.isArray(label)) {
+                  return label.join(' ');
+                }
+                return label;
+            };
+
+            const defaultChartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#3D405B',
+                            font: { size: 12, family: "'Noto Sans TC', sans-serif" }
+                        }
+                    },
+                    tooltip: {
+                         callbacks: { title: tooltipTitleCallback },
+                         backgroundColor: 'rgba(0,0,0,0.7)',
+                         titleFont: { size: 14, family: "'Noto Sans TC', sans-serif" },
+                         bodyFont: { size: 12, family: "'Noto Sans TC', sans-serif" }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#3D405B' },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#3D405B' },
+                        grid: { display: false }
+                    }
+                }
+            };
+            
+            const ctxBenefitRisk = document.getElementById('benefitRiskChart');
+            if (ctxBenefitRisk) {
+                new Chart(ctxBenefitRisk, {
+                    type: 'bar',
+                    data: {
+                        labels: ['降低死亡率 (效益)', '增加抗藥性 (風險)'],
+                        datasets: [{
+                            label: '風險比 (RR)',
+                            data: [0.54, 2.84],
+                            backgroundColor: ['rgba(141, 154, 122, 0.6)', 'rgba(211, 103, 74, 0.6)'],
+                            borderColor: ['#8D9A7A', '#D3674A'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        ...defaultChartOptions,
+                        indexAxis: 'y',
+                        plugins: { ...defaultChartOptions.plugins, legend: { display: false } },
+                        scales: {
+                           x: {
+                                beginAtZero: true,
+                                title: { display: true, text: '風險比 (越偏離1影響越大)', color: '#3D405B' }
+                           }
+                        }
+                    }
+                });
+            }
+
+            const ctxRisksDonut = document.getElementById('risksDonutChart');
+            if (ctxRisksDonut) {
+                new Chart(ctxRisksDonut, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['抗生素抗藥性', '艱難梭菌感染', '其他不良反應'],
+                        datasets: [{
+                            data: [65, 25, 10],
+                            backgroundColor: ['#D3674A', '#E09D89', '#8D9A7A'],
+                            hoverOffset: 8,
+                            borderColor: '#F8F7F4',
+                            borderWidth: 4
+                        }]
+                    },
+                    options: {
+                        ...defaultChartOptions,
+                        plugins: {
+                            ...defaultChartOptions.plugins,
+                            legend: { position: 'bottom' }
+                        },
+                        scales: { y: { display: false }, x: { display: false } }
+                    }
+                });
+            }
+
+            const tabsContainer = document.getElementById('tabs-container');
+            const tabsContent = document.getElementById('tabs-content');
+            if (tabsContainer && tabsContent) {
+                const tabButtons = tabsContainer.querySelectorAll('.tab-btn');
+                const tabContents = tabsContent.querySelectorAll('.tab-content');
+
+                const switchTab = (tabName) => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.tab === tabName);
+                    });
+                    tabContents.forEach(content => {
+                        content.classList.toggle('hidden', content.dataset.content !== tabName);
+                    });
+                };
+                
+                tabsContainer.addEventListener('click', (e) => {
+                    if (e.target.matches('.tab-btn')) {
+                        switchTab(e.target.dataset.tab);
+                    }
+                });
+
+                switchTab('ABA');
+            }
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const onScroll = () => {
+                let currentSection = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        currentSection = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === currentSection) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+
+            window.addEventListener('scroll', onScroll);
+
+        });
+    </script>
+</body>
+</html>
